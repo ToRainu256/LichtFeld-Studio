@@ -856,11 +856,7 @@ namespace lfs::io {
                 static_cast<int>(i),
                 static_cast<int>(img.camera_id));
 
-            // Pre-compute undistortion maps during loading (like gsplat reference)
-            // Only computes params; intrinsics are applied later by the trainer's prepare_undistortion()
-            if (camera->has_distortion()) {
-                camera->precompute_undistortion();
-            }
+            camera->precompute_undistortion();
 
             cameras.push_back(std::move(camera));
         }
