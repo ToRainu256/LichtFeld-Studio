@@ -46,6 +46,8 @@
 
 #include "visualizer/input/key_codes.hpp"
 
+#include <SDL3/SDL_clipboard.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -3431,7 +3433,8 @@ namespace lfs::python {
                                  {0, 0}, {u1, v1}, t, {0, 0, 0, 0});
                 },
                 nb::arg("texture"), nb::arg("size"), nb::arg("tint") = nb::none(), "Draw a DynamicTexture with automatic UV scaling")
-            .def("image_tensor", [](PyUILayout& /*self*/, const std::string& label, PyTensor& tensor, std::tuple<float, float> size, nb::object tint) {
+            .def(
+                "image_tensor", [](PyUILayout& /*self*/, const std::string& label, PyTensor& tensor, std::tuple<float, float> size, nb::object tint) {
                     PyDynamicTexture* tex_ptr = nullptr;
                     {
                         std::lock_guard lock(g_dynamic_textures_mutex);
@@ -4573,6 +4576,11 @@ namespace lfs::python {
             "get_ui_scale_preference",
             []() -> float { return vis::loadUiScalePreference(); },
             "Get saved UI scale preference (0.0 = auto)");
+
+        m.def(
+            "set_clipboard_text",
+            [](const std::string& text) { SDL_SetClipboardText(text.c_str()); },
+            nb::arg("text"), "Copy text to the system clipboard");
 
         // Language control (for Python-driven Edit menu)
         m.def(

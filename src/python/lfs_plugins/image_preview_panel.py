@@ -30,6 +30,8 @@ KI_UP = 91
 KI_RIGHT = 92
 KI_DOWN = 93
 
+_CHANNEL_NAMES = {1: "Gray", 2: "Gray+A", 3: "RGB", 4: "RGBA"}
+
 _instance = None
 
 
@@ -67,22 +69,32 @@ class ImagePreviewPanel(RmlPanel):
 
         self._image_info_cache: dict[str, tuple[int, int, int]] = {}
 
+    def _get_title(self) -> str:
+        if self._image_paths:
+            dirname = self._image_paths[0].parent.name
+            return f"{dirname} \u00b7 {self._current_index + 1} / {len(self._image_paths)}"
+        return lf.ui.tr("image_preview.title")
+
     def on_bind_model(self, ctx):
         model = ctx.create_data_model("image_preview")
         if model is None:
             return
 
-        tr = lf.ui.tr
-        model.bind_func("panel_label", lambda: tr("image_preview.title"))
+        model.bind_func("panel_label", lambda: self._get_title())
         self._handle = model.get_handle()
 
     def on_load(self, doc):
         super().on_load(doc)
         self._doc = doc
 
-        btn_fit = doc.get_element_by_id("btn-fit")
-        if btn_fit:
-            btn_fit.add_event_listener("click", lambda _ev: self._set_fit_to_window())
+        for eid, handler in [
+            ("nav-prev", lambda _ev: self._navigate(-1)),
+            ("nav-next", lambda _ev: self._navigate(1)),
+            ("btn-copy-path", lambda _ev: self._copy_path_to_clipboard()),
+        ]:
+            el = doc.get_element_by_id(eid)
+            if el:
+                el.add_event_listener("click", handler)
 
         cb_fit = doc.get_element_by_id("cb-fit")
         if cb_fit:
@@ -102,9 +114,10 @@ class ImagePreviewPanel(RmlPanel):
 
     def on_update(self, doc):
         if not self._dirty:
-            return
+            return False
         self._dirty = False
         self._refresh_ui(doc)
+        return True
 
     def open(self, image_paths: list[Path], mask_paths: list[Optional[Path]], start_index: int):
         if not image_paths:
@@ -130,9 +143,24 @@ class ImagePreviewPanel(RmlPanel):
             self._current_index = index
             self._dirty = True
 
-    def _set_fit_to_window(self):
-        self._fit_to_window = True
-        self._zoom = 1.0
+    def _toggle_fit(self):
+        self._fit_to_window = not self._fit_to_window
+        if self._fit_to_window:
+            self._zoom = 1.0
+        self._dirty = True
+
+    def _copy_path_to_clipboard(self):
+        if self._image_paths:
+            lf.ui.set_clipboard_text(str(self._image_paths[self._current_index]))
+
+    def _zoom_in(self):
+        self._zoom = min(ZOOM_MAX, self._zoom * 1.25)
+        self._fit_to_window = False
+        self._dirty = True
+
+    def _zoom_out(self):
+        self._zoom = max(ZOOM_MIN, self._zoom / 1.25)
+        self._fit_to_window = False
         self._dirty = True
 
     def _has_valid_overlay(self) -> bool:
@@ -205,8 +233,12 @@ class ImagePreviewPanel(RmlPanel):
 
         self._update_main_image(doc, has_images)
         self._update_filmstrip(doc, has_images)
+        self._update_nav_arrows(doc, has_images)
         self._update_sidebar(doc, has_images)
         self._update_status(doc, has_images)
+
+        if hasattr(self, '_handle'):
+            self._handle.dirty("panel_label")
 
     def _update_main_image(self, doc, has_images: bool):
         main_img = doc.get_element_by_id("main-image")
@@ -262,7 +294,12 @@ class ImagePreviewPanel(RmlPanel):
             parts = []
             for i in range(len(self._image_paths)):
                 cls = "thumb-item selected" if i == self._current_index else "thumb-item"
-                parts.append(f'<div class="{cls}" id="thumb-{i}"></div>')
+                idx_label = f"{i + 1:02d}"
+                parts.append(
+                    f'<div class="{cls}" id="thumb-{i}">'
+                    f'<span class="thumb-index">{idx_label}</span>'
+                    f'</div>'
+                )
             filmstrip.set_inner_rml("\n".join(parts))
 
             for i, path in enumerate(self._image_paths):
@@ -283,6 +320,24 @@ class ImagePreviewPanel(RmlPanel):
             self._scroll_filmstrip(filmstrip, self._current_index)
             self._prev_index = self._current_index
 
+    def _update_nav_arrows(self, doc, has_images: bool):
+        prev_el = doc.get_element_by_id("nav-prev")
+        next_el = doc.get_element_by_id("nav-next")
+
+        if not has_images or len(self._image_paths) <= 1:
+            if prev_el:
+                prev_el.set_attribute("class", "nav-arrow hidden")
+            if next_el:
+                next_el.set_attribute("class", "nav-arrow hidden")
+            return
+
+        if prev_el:
+            cls = "nav-arrow hidden" if self._current_index == 0 else "nav-arrow"
+            prev_el.set_attribute("class", cls)
+        if next_el:
+            cls = "nav-arrow hidden" if self._current_index >= len(self._image_paths) - 1 else "nav-arrow"
+            next_el.set_attribute("class", cls)
+
     def _update_sidebar(self, doc, has_images: bool):
         sidebar = doc.get_element_by_id("sidebar")
         if not sidebar:
@@ -295,46 +350,50 @@ class ImagePreviewPanel(RmlPanel):
 
         tr = lf.ui.tr
 
+        _set_text(doc, "sidebar-file-header", tr("image_preview.file_section"))
         _set_text(doc, "sidebar-image-label", tr("image_preview.image_section"))
-        _set_text(doc, "sidebar-file-label", tr("image_preview.file_section"))
+        _set_text(doc, "sidebar-storage-label", tr("image_preview.storage_section"))
         _set_text(doc, "sidebar-view-label", tr("image_preview.view_section"))
 
         if has_images:
             path = self._image_paths[self._current_index]
             ext = path.suffix[1:].upper() if path.suffix else "?"
-            w, h, _c = self._get_image_info(path)
+            w, h, c = self._get_image_info(path)
+
+            _set_text(doc, "sidebar-filename", path.name)
 
             if w > 0 and h > 0:
-                _set_text(doc, "sidebar-dimensions", f"{w} x {h}")
+                _set_text(doc, "sidebar-width", str(w))
+                _set_text(doc, "sidebar-height", str(h))
                 mp = (w * h) / 1_000_000
-                ratio = self._format_aspect_ratio(w, h)
-                mp_text = f"{mp:.1f} MP"
-                if ratio:
-                    mp_text += f" \u00b7 {ratio}"
-                _set_text(doc, "sidebar-megapixels", mp_text)
+                _set_text(doc, "sidebar-mp", f"{mp:.1f} MP")
+                _set_text(doc, "sidebar-aspect", self._format_aspect_ratio(w, h))
             else:
-                _set_text(doc, "sidebar-dimensions", "")
-                _set_text(doc, "sidebar-megapixels", "")
+                for eid in ("sidebar-width", "sidebar-height", "sidebar-mp", "sidebar-aspect"):
+                    _set_text(doc, eid, "")
 
+            _set_text(doc, "sidebar-channels", _CHANNEL_NAMES.get(c, str(c)))
+
+            _set_text(doc, "sidebar-format", ext)
             if path.exists():
-                size_bytes = path.stat().st_size
-                size_str = self._format_size(size_bytes)
-                _set_text(doc, "sidebar-fileinfo", f"{size_str} \u00b7 {ext}")
+                _set_text(doc, "sidebar-size", self._format_size(path.stat().st_size))
             else:
-                _set_text(doc, "sidebar-fileinfo", ext)
+                _set_text(doc, "sidebar-size", "")
 
-            parent_str = str(path.parent)
-            if len(parent_str) > 25:
-                parent_str = "..." + parent_str[-22:]
-            _set_text(doc, "sidebar-filepath", parent_str)
+            full_path = str(path)
+            display_dir = str(path.parent)
+            if len(display_dir) > 30:
+                display_dir = "..." + display_dir[-27:]
+            _set_text(doc, "sidebar-filepath", display_dir)
+            filepath_el = doc.get_element_by_id("sidebar-filepath")
+            if filepath_el:
+                filepath_el.set_attribute("title", full_path)
         else:
-            _set_text(doc, "sidebar-fileinfo", "")
-            _set_text(doc, "sidebar-filepath", "")
-            _set_text(doc, "sidebar-dimensions", "")
-            _set_text(doc, "sidebar-megapixels", "")
-
-        zoom_text = f"{tr('image_preview.zoom')}: {self._get_zoom_display()}"
-        _set_text(doc, "sidebar-zoom", zoom_text)
+            _set_text(doc, "sidebar-filename", "")
+            for eid in ("sidebar-width", "sidebar-height", "sidebar-mp",
+                        "sidebar-aspect", "sidebar-channels", "sidebar-format",
+                        "sidebar-size", "sidebar-filepath"):
+                _set_text(doc, eid, "")
 
         cb_fit = doc.get_element_by_id("cb-fit")
         if cb_fit:
@@ -345,23 +404,14 @@ class ImagePreviewPanel(RmlPanel):
         _set_text(doc, "cb-fit-label", tr("image_preview.fit_to_window"))
 
         has_mask = self._has_valid_overlay()
-        mask_sep = doc.get_element_by_id("sidebar-mask-sep")
-        mask_label = doc.get_element_by_id("sidebar-mask-label")
-        mask_name = doc.get_element_by_id("sidebar-mask-name")
-        mask_row = doc.get_element_by_id("mask-check-row")
+        mask_section = doc.get_element_by_id("sidebar-mask-section")
 
         if has_mask:
-            if mask_sep:
-                mask_sep.set_attribute("class", "separator")
-            if mask_label:
-                mask_label.set_inner_rml(_xml_escape(tr("image_preview.mask_section")))
-                mask_label.set_attribute("class", "sidebar-section")
-            if mask_name:
-                name = self._mask_paths[self._current_index].name
-                mask_name.set_inner_rml(_xml_escape(name))
-                mask_name.set_attribute("class", "sidebar-value")
-            if mask_row:
-                mask_row.set_attribute("class", "sidebar-check-row")
+            if mask_section:
+                mask_section.set_attribute("class", "sidebar-section-ip")
+            _set_text(doc, "sidebar-mask-label", tr("image_preview.mask_section"))
+            name = self._mask_paths[self._current_index].name
+            _set_text(doc, "sidebar-mask-name", name)
             cb_mask = doc.get_element_by_id("cb-mask")
             if cb_mask:
                 if self._show_overlay:
@@ -370,38 +420,24 @@ class ImagePreviewPanel(RmlPanel):
                     cb_mask.remove_attribute("checked")
             _set_text(doc, "cb-mask-label", tr("image_preview.show_mask_overlay"))
         else:
-            if mask_sep:
-                mask_sep.set_attribute("class", "separator hidden")
-            if mask_label:
-                mask_label.set_attribute("class", "sidebar-section hidden")
-            if mask_name:
-                mask_name.set_attribute("class", "sidebar-value hidden")
-            if mask_row:
-                mask_row.set_attribute("class", "sidebar-check-row hidden")
+            if mask_section:
+                mask_section.set_attribute("class", "sidebar-section-ip hidden")
 
     def _update_status(self, doc, has_images: bool):
-        info_el = doc.get_element_by_id("status-info")
-        zoom_el = doc.get_element_by_id("status-zoom")
+        ids = ("st-w", "st-h", "st-ch", "st-zoom", "st-counter")
+        if not has_images:
+            for sid in ids:
+                _set_text(doc, sid, "")
+            return
 
-        if has_images:
-            path = self._image_paths[self._current_index]
-            w, h, _c = self._get_image_info(path)
-            parts = []
-            if w > 0 and h > 0:
-                parts.append(f"{w}x{h}")
-                mp = (w * h) / 1_000_000
-                parts.append(f"{mp:.1f} MP")
-            if path.exists():
-                parts.append(self._format_size(path.stat().st_size))
-            if info_el:
-                info_el.set_inner_rml(_xml_escape(" \u00b7 ".join(parts)))
-        else:
-            if info_el:
-                info_el.set_inner_rml("")
+        path = self._image_paths[self._current_index]
+        w, h, c = self._get_image_info(path)
 
-        zoom_text = f"{lf.ui.tr('image_preview.zoom')}: {self._get_zoom_display()}"
-        if zoom_el:
-            zoom_el.set_inner_rml(_xml_escape(zoom_text))
+        _set_text(doc, "st-w", f"W {w}" if w > 0 else "")
+        _set_text(doc, "st-h", f"H {h}" if h > 0 else "")
+        _set_text(doc, "st-ch", f"CH {c}")
+        _set_text(doc, "st-zoom", f"Zoom {self._get_zoom_display()}")
+        _set_text(doc, "st-counter", f"{self._current_index + 1} / {len(self._image_paths)}")
 
     # -- Keyboard --
 
@@ -421,10 +457,7 @@ class ImagePreviewPanel(RmlPanel):
             self._go_to_image(len(self._image_paths) - 1)
             event.stop_propagation()
         elif key == KI_F:
-            self._fit_to_window = not self._fit_to_window
-            if self._fit_to_window:
-                self._zoom = 1.0
-            self._dirty = True
+            self._toggle_fit()
             event.stop_propagation()
         elif key == KI_I:
             self._show_info = not self._show_info
@@ -447,14 +480,10 @@ class ImagePreviewPanel(RmlPanel):
             self._dirty = True
             event.stop_propagation()
         elif key == KI_OEM_PLUS:
-            self._zoom = min(ZOOM_MAX, self._zoom * 1.25)
-            self._fit_to_window = False
-            self._dirty = True
+            self._zoom_in()
             event.stop_propagation()
         elif key == KI_OEM_MINUS:
-            self._zoom = max(ZOOM_MIN, self._zoom / 1.25)
-            self._fit_to_window = False
-            self._dirty = True
+            self._zoom_out()
             event.stop_propagation()
         elif key == KI_SPACE:
             if self._fit_to_window:
@@ -477,7 +506,7 @@ class ImagePreviewPanel(RmlPanel):
 
     @staticmethod
     def _scroll_filmstrip(filmstrip, index: int):
-        THUMB_H = 68  # 64dp height + 4dp margin
+        THUMB_H = 48  # 44dp height + border + margin
         item_top = index * THUMB_H
         item_bot = item_top + THUMB_H
         view_h = filmstrip.client_height

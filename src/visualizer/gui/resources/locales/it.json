@@ -793,7 +793,8 @@
     "no_images_loaded": "Nessuna immagine caricata",
     "no_image": "Nessuna immagine",
     "zoom": "Zoom",
-    "fit": "Adatta"
+    "fit": "Adatta",
+    "storage_section": "ARCHIVIAZIONE"
   },
   "startup": {
     "supported_by": "Supportato da",

@@ -805,7 +805,8 @@
     "fit": "Fit",
     "visible": "Visible",
     "hidden": "Hidden",
-    "mask_section": "MASK"
+    "mask_section": "MASK",
+    "storage_section": "STORAGE"
   },
   "startup": {
     "supported_by": "Supported by",

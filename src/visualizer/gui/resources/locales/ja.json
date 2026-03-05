@@ -793,7 +793,8 @@
     "no_images_loaded": "画像が読み込まれていません",
     "no_image": "画像なし",
     "zoom": "ズーム",
-    "fit": "フィット"
+    "fit": "フィット",
+    "storage_section": "ストレージ"
   },
   "startup": {
     "supported_by": "サポート",

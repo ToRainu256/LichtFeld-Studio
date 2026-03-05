@@ -793,7 +793,8 @@
     "no_images_loaded": "Aucune image chargee",
     "no_image": "Pas d image",
     "zoom": "Zoom",
-    "fit": "Ajuster"
+    "fit": "Ajuster",
+    "storage_section": "STOCKAGE"
   },
   "startup": {
     "supported_by": "Soutenu par",

@@ -793,7 +793,8 @@
     "no_images_loaded": "Geen afbeeldingen geladen",
     "no_image": "Geen afbeelding",
     "zoom": "Zoom",
-    "fit": "Passend"
+    "fit": "Passend",
+    "storage_section": "OPSLAG"
   },
   "startup": {
     "supported_by": "Ondersteund door",

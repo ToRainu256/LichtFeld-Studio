@@ -1079,6 +1079,30 @@ namespace lfs::vis::gui {
         reg.draw_panels(PanelSpace::Floating, draw_ctx, &floating_input);
         reg.draw_panels(PanelSpace::Dockable, draw_ctx);
 
+        {
+            auto tip = RmlPanelHost::consumeFrameTooltip();
+            if (!tip.empty()) {
+                const auto& p = lfs::vis::theme().palette;
+                auto* fg = ImGui::GetForegroundDrawList(ImGui::GetMainViewport());
+                ImVec2 mouse = ImGui::GetMousePos();
+                ImVec2 pad(8, 6);
+                ImVec2 text_size = ImGui::CalcTextSize(tip.c_str());
+                ImVec2 box_min(mouse.x + 14, mouse.y + 18);
+                ImVec2 box_max(box_min.x + text_size.x + pad.x * 2,
+                               box_min.y + text_size.y + pad.y * 2);
+                fg->AddRectFilled(box_min, box_max,
+                                  ImGui::ColorConvertFloat4ToU32(p.surface_bright), 4.0f);
+                fg->AddRect(box_min, box_max,
+                            ImGui::ColorConvertFloat4ToU32(p.border), 4.0f);
+                fg->AddText(ImVec2(box_min.x + pad.x, box_min.y + pad.y),
+                            ImGui::ColorConvertFloat4ToU32(p.text), tip.c_str());
+            }
+            if (RmlPanelHost::consumeFrameWantsKeyboard()) {
+                ImGui::GetIO().WantCaptureKeyboard = true;
+                ImGui::GetIO().WantTextInput = true;
+            }
+        }
+
         gizmo_manager_.updateToolState(ctx, ui_hidden_);
         gizmo_manager_.updateCropFlash();
 

@@ -793,7 +793,8 @@
     "no_images_loaded": "Keine Bilder geladen",
     "no_image": "Kein Bild",
     "zoom": "Zoom",
-    "fit": "Anpassen"
+    "fit": "Anpassen",
+    "storage_section": "SPEICHER"
   },
   "startup": {
     "supported_by": "Unterstützt von",

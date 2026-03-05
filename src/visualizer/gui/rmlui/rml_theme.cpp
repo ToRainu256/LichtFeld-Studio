@@ -67,7 +67,10 @@ namespace lfs::vis::gui::rml_theme {
         const auto surface = colorToRml(p.surface);
         const auto surface_bright = colorToRml(p.surface_bright);
         const auto primary = colorToRml(p.primary);
+        const auto primary_dim = colorToRml(p.primary_dim);
+        const auto background = colorToRml(p.background);
         const auto border = colorToRml(p.border);
+        const auto primary_select = colorToRmlAlpha(p.primary, 0.18f);
 
         std::string check_path;
         try {
@@ -224,7 +227,32 @@ namespace lfs::vis::gui::rml_theme {
                std::format(
                    ".num-step-btn {{ color: {0}; background-color: {1}; border-color: {2}; }}\n"
                    ".num-step-btn:hover {{ background-color: {3}; border-color: {4}; }}\n",
-                   text_dim, surface, border, surface_bright, primary);
+                   text_dim, surface, border, surface_bright, primary) +
+               std::format(
+                   ".bg-deep {{ background-color: {0}; }}\n"
+                   "#filmstrip {{ background-color: {0}; border-color: {2}; }}\n"
+                   ".thumb-item:hover {{ border-color: {2}; }}\n"
+                   ".thumb-item.selected {{ border-color: {7}; }}\n"
+                   ".section-label-ip {{ color: {8}; }}\n"
+                   ".sidebar-header-label-ip {{ color: {4}; }}\n"
+                   ".sidebar-header-ip {{ border-color: {2}; }}\n"
+                   ".sidebar-section-ip {{ border-color: {2}; }}\n"
+                   ".meta-key {{ color: {4}; }}\n"
+                   ".meta-val-accent {{ color: {7}; }}\n"
+                   ".meta-val-secondary {{ color: {4}; }}\n"
+                   "#image-container {{ background-color: {0}; }}\n"
+                   ".nav-arrow {{ color: {4}; border-color: {2}; }}\n"
+                   ".nav-arrow:hover {{ background-color: {3}; color: {5}; border-color: {8}; }}\n"
+                   "#sidebar {{ background-color: {1}; border-color: {2}; }}\n"
+                   "#status-bar {{ background-color: {1}; border-color: {2}; }}\n"
+                   ".status-item {{ color: {4}; }}\n"
+                   ".status-counter {{ color: {4}; }}\n"
+                   "#no-image-text {{ color: {4}; }}\n"
+                   ".btn-copy-icon {{ image-color: {4}; }}\n"
+                   ".btn-copy:hover .btn-copy-icon {{ image-color: {5}; }}\n"
+                   ".btn-copy:hover {{ background-color: {3}; }}\n",
+                   background, surface, border, surface_bright, text_dim,
+                   text, primary_select, primary, primary_dim);
     }
 
     std::string generateSpriteSheetRCSS() {

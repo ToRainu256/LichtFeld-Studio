@@ -793,7 +793,8 @@
     "no_images_loaded": "未加载图像",
     "no_image": "无图像",
     "zoom": "缩放",
-    "fit": "适配"
+    "fit": "适配",
+    "storage_section": "存储"
   },
   "startup": {
     "supported_by": "支持：",

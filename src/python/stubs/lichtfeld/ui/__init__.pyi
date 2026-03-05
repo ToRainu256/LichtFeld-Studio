@@ -2264,6 +2264,9 @@ def get_ui_scale() -> float:
 def get_ui_scale_preference() -> float:
     """Get saved UI scale preference (0.0 = auto)"""
 
+def set_clipboard_text(text: str) -> None:
+    """Copy text to the system clipboard"""
+
 def set_language(lang_code: str) -> None:
     """Set language by code (e.g., 'en', 'de')"""
 

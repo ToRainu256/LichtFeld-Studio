@@ -793,7 +793,8 @@
     "no_images_loaded": "Brak zaladowanych obrazow",
     "no_image": "Brak obrazu",
     "zoom": "Zoom",
-    "fit": "Dopasuj"
+    "fit": "Dopasuj",
+    "storage_section": "MAGAZYN"
   },
   "startup": {
     "supported_by": "Wspierane przez",
