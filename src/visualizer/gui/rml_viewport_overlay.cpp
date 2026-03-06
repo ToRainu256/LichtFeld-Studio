@@ -8,7 +8,9 @@
 
 #include "gui/rml_viewport_overlay.hpp"
 #include "core/logger.hpp"
+#include "gui/rmlui/rml_panel_host.hpp"
 #include "gui/rmlui/rml_theme.hpp"
+#include "gui/rmlui/rml_tooltip.hpp"
 #include "gui/rmlui/rmlui_manager.hpp"
 #include "gui/rmlui/rmlui_render_interface.hpp"
 #include "internal/resource_paths.hpp"
@@ -145,6 +147,8 @@ namespace lfs::vis::gui {
                 rml_context_->ProcessMouseButtonDown(1, 0);
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                 rml_context_->ProcessMouseButtonUp(1, 0);
+
+            RmlPanelHost::setFrameTooltip(resolveRmlTooltip(hover));
         }
     }
 

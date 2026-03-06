@@ -104,6 +104,41 @@ namespace lfs::vis::gui {
                 return SDL_SCANCODE_1 + (key - ImGuiKey_1);
             return -1;
         }
+
+        void applyFrameKeyboardCapture() {
+            if (!RmlPanelHost::consumeFrameWantsKeyboard())
+                return;
+
+            ImGui::GetIO().WantCaptureKeyboard = true;
+            ImGui::GetIO().WantTextInput = true;
+        }
+
+        void drawFrameTooltip(const std::string& tip) {
+            if (tip.empty())
+                return;
+
+            const auto& p = lfs::vis::theme().palette;
+            auto* vp = ImGui::GetMainViewport();
+            auto* fg = ImGui::GetForegroundDrawList(vp);
+            const ImVec2 mouse = ImGui::GetMousePos();
+            const ImVec2 pad(8, 6);
+            const ImVec2 text_size = ImGui::CalcTextSize(tip.c_str());
+            const float box_w = text_size.x + pad.x * 2;
+            const float box_h = text_size.y + pad.y * 2;
+
+            ImVec2 box_min(mouse.x + 14, mouse.y + 18);
+            if (box_min.x + box_w > vp->Pos.x + vp->Size.x)
+                box_min.x = mouse.x - 14 - box_w;
+            if (box_min.y + box_h > vp->Pos.y + vp->Size.y)
+                box_min.y = mouse.y - 18 - box_h;
+
+            const ImVec2 box_max(box_min.x + box_w, box_min.y + box_h);
+            fg->AddRectFilled(box_min, box_max,
+                              ImGui::ColorConvertFloat4ToU32(p.surface_bright), 4.0f);
+            fg->AddRect(box_min, box_max, ImGui::ColorConvertFloat4ToU32(p.border), 4.0f);
+            fg->AddText(ImVec2(box_min.x + pad.x, box_min.y + pad.y),
+                        ImGui::ColorConvertFloat4ToU32(p.text), tip.c_str());
+        }
     } // namespace
 
     GuiManager::GuiManager(VisualizerImpl* viewer)
@@ -719,8 +754,6 @@ namespace lfs::vis::gui {
             reg.register_panel(std::move(info));
         };
 
-        constexpr uint32_t SELF = static_cast<uint32_t>(PanelOption::SELF_MANAGED);
-
         // Floating panels (self-managed windows)
         reg_panel("native.video_extractor", "Video Extractor",
                   make_panel(VideoExtractorPanel(video_extractor_dialog_.get())),
@@ -1051,18 +1084,7 @@ namespace lfs::vis::gui {
         panel_layout_.renderRightPanel(ctx, draw_ctx, show_main_panel_, ui_hidden_,
                                        window_states_, focus_panel_name_, panel_input, screen);
 
-        {
-            auto tip = RmlPanelHost::consumeFrameTooltip();
-            if (!tip.empty()) {
-                ImGui::BeginTooltip();
-                ImGui::TextUnformatted(tip.c_str());
-                ImGui::EndTooltip();
-            }
-            if (RmlPanelHost::consumeFrameWantsKeyboard()) {
-                ImGui::GetIO().WantCaptureKeyboard = true;
-                ImGui::GetIO().WantTextInput = true;
-            }
-        }
+        applyFrameKeyboardCapture();
 
         // Apply cursor requests from right panel and panel layout
         auto apply_cursor = [](CursorRequest req) {
@@ -1083,29 +1105,7 @@ namespace lfs::vis::gui {
         reg.draw_panels(PanelSpace::Floating, draw_ctx, &floating_input);
         reg.draw_panels(PanelSpace::Dockable, draw_ctx);
 
-        {
-            auto tip = RmlPanelHost::consumeFrameTooltip();
-            if (!tip.empty()) {
-                const auto& p = lfs::vis::theme().palette;
-                auto* fg = ImGui::GetForegroundDrawList(ImGui::GetMainViewport());
-                ImVec2 mouse = ImGui::GetMousePos();
-                ImVec2 pad(8, 6);
-                ImVec2 text_size = ImGui::CalcTextSize(tip.c_str());
-                ImVec2 box_min(mouse.x + 14, mouse.y + 18);
-                ImVec2 box_max(box_min.x + text_size.x + pad.x * 2,
-                               box_min.y + text_size.y + pad.y * 2);
-                fg->AddRectFilled(box_min, box_max,
-                                  ImGui::ColorConvertFloat4ToU32(p.surface_bright), 4.0f);
-                fg->AddRect(box_min, box_max,
-                            ImGui::ColorConvertFloat4ToU32(p.border), 4.0f);
-                fg->AddText(ImVec2(box_min.x + pad.x, box_min.y + pad.y),
-                            ImGui::ColorConvertFloat4ToU32(p.text), tip.c_str());
-            }
-            if (RmlPanelHost::consumeFrameWantsKeyboard()) {
-                ImGui::GetIO().WantCaptureKeyboard = true;
-                ImGui::GetIO().WantTextInput = true;
-            }
-        }
+        applyFrameKeyboardCapture();
 
         gizmo_manager_.updateToolState(ctx, ui_hidden_);
         gizmo_manager_.updateCropFlash();
@@ -1121,6 +1121,9 @@ namespace lfs::vis::gui {
             rml_menu_bar_.fbo().blitToDrawList(
                 ImGui::GetForegroundDrawList(), mvp->Pos, mvp->Size);
         }
+
+        applyFrameKeyboardCapture();
+        drawFrameTooltip(RmlPanelHost::consumeFrameTooltip());
 
         // Recompute viewport layout
         viewport_layout_ = panel_layout_.computeViewportLayout(

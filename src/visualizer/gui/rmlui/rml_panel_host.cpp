@@ -7,10 +7,10 @@
 // clang-format on
 
 #include "gui/rmlui/rml_panel_host.hpp"
-#include "core/event_bridge/localization_manager.hpp"
 #include "core/logger.hpp"
 #include "gui/panel_layout.hpp"
 #include "gui/rmlui/rml_theme.hpp"
+#include "gui/rmlui/rml_tooltip.hpp"
 #include "gui/rmlui/rmlui_manager.hpp"
 #include "gui/rmlui/rmlui_render_interface.hpp"
 #include "internal/resource_paths.hpp"
@@ -85,6 +85,10 @@ namespace lfs::vis::gui {
         std::string result;
         result.swap(s_frame_tooltip);
         return result;
+    }
+
+    void RmlPanelHost::setFrameTooltip(const std::string& tip) {
+        s_frame_tooltip = tip;
     }
 
     bool RmlPanelHost::consumeFrameWantsKeyboard() {
@@ -520,22 +524,7 @@ namespace lfs::vis::gui {
         if (hovered) {
             auto* hover = rml_context_->GetHoverElement();
             if (hover) {
-                Rml::String tip;
-                for (auto* el = hover; el; el = el->GetParentNode()) {
-                    auto key = el->GetAttribute<Rml::String>("data-tooltip", "");
-                    if (!key.empty()) {
-                        auto& loc = lfs::event::LocalizationManager::getInstance();
-                        tip = loc.get(key);
-                        if (tip == key)
-                            tip.clear();
-                        break;
-                    }
-                    tip = el->GetAttribute<Rml::String>("title", "");
-                    if (!tip.empty())
-                        break;
-                }
-                if (!tip.empty())
-                    s_frame_tooltip = std::string(tip.c_str(), tip.size());
+                s_frame_tooltip = resolveRmlTooltip(hover);
             }
         }
 

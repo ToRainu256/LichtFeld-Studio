@@ -6,10 +6,10 @@
 // clang-format on
 
 #include "sequencer/rml_sequencer_panel.hpp"
-#include "core/event_bridge/localization_manager.hpp"
 #include "core/events.hpp"
 #include "core/logger.hpp"
 #include "gui/rmlui/rml_theme.hpp"
+#include "gui/rmlui/rml_tooltip.hpp"
 #include "gui/rmlui/rmlui_manager.hpp"
 #include "gui/rmlui/rmlui_render_interface.hpp"
 #include "gui/string_keys.hpp"
@@ -591,15 +591,7 @@ namespace lfs::vis {
         tooltip_.clear();
         auto* hover = rml_context_->GetHoverElement();
         if (hover) {
-            for (auto* el = hover; el; el = el->GetParentNode()) {
-                auto key = el->GetAttribute<Rml::String>("data-tooltip", "");
-                if (!key.empty()) {
-                    const char* resolved = LOC(key.c_str());
-                    if (resolved && std::string_view(resolved) != key.c_str())
-                        tooltip_ = resolved;
-                    break;
-                }
-            }
+            tooltip_ = gui::resolveRmlTooltip(hover);
 
             if (input.mouse_clicked[1]) {
                 for (auto* el = hover; el; el = el->GetParentNode()) {

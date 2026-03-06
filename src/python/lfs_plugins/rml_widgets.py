@@ -264,11 +264,12 @@ def number_input(container, id, label="", value="", data_prop="",
 
 
 def icon_button(container, id, icon_src, selected=False,
-                disabled=False, tooltip=""):
+                disabled=False, tooltip="", tooltip_key=""):
     """Create an icon button for toolbars.
 
     Args:
         icon_src: Path to icon image (relative to assets).
+        tooltip_key: Locale key for tooltip (resolved via LocalizationManager).
     """
     btn = container.append_child("div")
     btn.set_id(id)
@@ -281,7 +282,9 @@ def icon_button(container, id, icon_src, selected=False,
     img = btn.append_child("img")
     img.set_attribute("src", icon_src)
 
-    if tooltip:
+    if tooltip_key:
+        btn.set_attribute("data-tooltip", tooltip_key)
+    elif tooltip:
         btn.set_attribute("title", tooltip)
 
     return btn

@@ -7,7 +7,6 @@
 #include "gui/panel_registry.hpp"
 #include "gui/rmlui/rml_fbo.hpp"
 #include <core/export.hpp>
-#include <cstring>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -44,6 +43,7 @@ namespace lfs::vis::gui {
         bool wantsKeyboard() const { return wants_keyboard_; }
 
         static std::string consumeFrameTooltip();
+        static void setFrameTooltip(const std::string& tip);
         static bool consumeFrameWantsKeyboard();
 
         void setHeightMode(HeightMode mode) { height_mode_ = mode; }
