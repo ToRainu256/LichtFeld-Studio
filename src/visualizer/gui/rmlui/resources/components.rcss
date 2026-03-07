@@ -192,6 +192,10 @@ selectbox option:hover {
     background-color: #89b4fa;
 }
 
+selectvalue {
+    padding-top: 2dp;
+}
+
 selectarrow {
     width: 14dp;
     margin-left: 4dp;
