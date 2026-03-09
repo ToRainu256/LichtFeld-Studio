@@ -7,8 +7,6 @@
 #include <core/export.hpp>
 #include <glad/glad.h>
 
-#include <chrono>
-
 namespace lfs::vis::gui {
 
     class LFS_VIS_API RmlFBO {
@@ -19,7 +17,7 @@ namespace lfs::vis::gui {
         RmlFBO(const RmlFBO&) = delete;
         RmlFBO& operator=(const RmlFBO&) = delete;
 
-        void ensure(int w, int h);
+        bool ensure(int w, int h);
         void bind(GLint* prev_fbo);
         void unbind(GLint prev_fbo);
         void blitAsImage(float w, float h);
@@ -40,7 +38,6 @@ namespace lfs::vis::gui {
     private:
         static void ensureBlitProgram();
         void reallocate(int w, int h);
-        void maybeShrink();
         float u_scale() const { return alloc_w_ > 0 ? static_cast<float>(width_) / static_cast<float>(alloc_w_) : 1.0f; }
         float v_scale() const { return alloc_h_ > 0 ? static_cast<float>(height_) / static_cast<float>(alloc_h_) : 1.0f; }
 
@@ -55,7 +52,6 @@ namespace lfs::vis::gui {
         int height_ = 0;
         int alloc_w_ = 0;
         int alloc_h_ = 0;
-        std::chrono::steady_clock::time_point last_resize_time_{};
     };
 
 } // namespace lfs::vis::gui

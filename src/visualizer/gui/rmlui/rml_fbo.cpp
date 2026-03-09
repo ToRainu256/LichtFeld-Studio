@@ -25,27 +25,23 @@ namespace lfs::vis::gui {
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                 GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         }
-
-        constexpr float kShrinkThreshold = 1.5f;
-        constexpr auto kShrinkCooldown = std::chrono::seconds(2);
     } // namespace
 
     RmlFBO::~RmlFBO() { destroy(); }
 
-    void RmlFBO::ensure(int w, int h) {
+    bool RmlFBO::ensure(int w, int h) {
         assert(w > 0 && h > 0);
         if (w <= 0 || h <= 0)
-            return;
+            return false;
 
         width_ = w;
         height_ = h;
 
-        if (fbo_ && w <= alloc_w_ && h <= alloc_h_) {
-            maybeShrink();
-            return;
-        }
+        if (fbo_ && w <= alloc_w_ && h <= alloc_h_)
+            return false;
 
         reallocate(std::max(w, alloc_w_), std::max(h, alloc_h_));
+        return true;
     }
 
     void RmlFBO::reallocate(int w, int h) {
@@ -57,7 +53,6 @@ namespace lfs::vis::gui {
         height_ = target_h;
         alloc_w_ = w;
         alloc_h_ = h;
-        last_resize_time_ = std::chrono::steady_clock::now();
 
         glGenFramebuffers(1, &fbo_);
         glGenTextures(1, &texture_);
@@ -89,18 +84,6 @@ namespace lfs::vis::gui {
             return;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    void RmlFBO::maybeShrink() {
-        if (alloc_w_ <= static_cast<int>(width_ * kShrinkThreshold) &&
-            alloc_h_ <= static_cast<int>(height_ * kShrinkThreshold))
-            return;
-
-        const auto now = std::chrono::steady_clock::now();
-        if (now - last_resize_time_ < kShrinkCooldown)
-            return;
-
-        reallocate(width_, height_);
     }
 
     void RmlFBO::bind(GLint* prev_fbo) {

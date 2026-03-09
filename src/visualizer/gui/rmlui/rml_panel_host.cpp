@@ -531,12 +531,12 @@ namespace lfs::vis::gui {
         const bool externally_clipped =
             (clip_y_min_ >= 0.0f && clip_y_max_ > clip_y_min_);
 
-        fbo_.ensure(pw, std::min(ph, kMaxFboSize));
+        const bool fbo_reallocated = fbo_.ensure(pw, std::min(ph, kMaxFboSize));
         if (!fbo_.valid())
             return;
 
         const bool dirty = render_needed_ || content_dirty_ || theme_dirty ||
-                           size_dirty || animation_active_;
+                           size_dirty || animation_active_ || fbo_reallocated;
         if (!dirty)
             return;
 
