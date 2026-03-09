@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later */
 
-#include "input/frame_input_buffer.hpp"
 #include "gui/rmlui/sdl_rml_key_mapping.hpp"
+#include "input/frame_input_buffer.hpp"
 #include <gtest/gtest.h>
 
 namespace {
