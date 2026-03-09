@@ -4,6 +4,8 @@ import math
 
 import lichtfeld as lf
 
+from .. import toolbar as viewport_toolbar
+
 _HOOK_PANEL = "viewport_overlay"
 _DOCUMENT_SECTION = "document"
 _DRAW_SECTION = "draw"
@@ -71,6 +73,7 @@ class _OverlayDocumentController:
         self._video_state = {}
         self._last_import_signature = None
         self._last_video_signature = None
+        viewport_toolbar.reset_overlay_state()
 
     def update(self, doc=None):
         if doc is None or not hasattr(doc, "get_element_by_id"):
@@ -116,6 +119,8 @@ class _OverlayDocumentController:
             self._last_video_signature = video_signature
             needs_dirty = True
 
+        viewport_toolbar.update_overlay(doc)
+
         if needs_dirty:
             self._handle.dirty_all()
 
@@ -132,6 +137,7 @@ class _OverlayDocumentController:
         self._handle = None
         doc.remove_data_model(_MODEL_NAME)
         body.remove_attribute(_MODEL_MARKER)
+        viewport_toolbar.reset_overlay_state()
 
         model = doc.create_data_model(_MODEL_NAME)
         if model is None:
@@ -164,8 +170,11 @@ class _OverlayDocumentController:
         model.bind_func("video_stage", lambda: self._video_state.get("stage", ""))
         model.bind_func("video_cancel_label", lambda: lf.ui.tr("common.cancel"))
 
+        viewport_toolbar.bind_overlay_model(model)
+
         model.bind_event("overlay_action", self._on_overlay_action)
         self._handle = model.get_handle()
+        viewport_toolbar.attach_overlay_model_handle(self._handle)
         body.set_attribute("data-model", _MODEL_NAME)
         body.set_attribute(_MODEL_MARKER, "1")
         self._handle.dirty_all()

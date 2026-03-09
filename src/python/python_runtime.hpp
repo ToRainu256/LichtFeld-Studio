@@ -573,6 +573,10 @@ namespace lfs::python {
     LFS_PYTHON_RUNTIME_API void set_rml_manager(void* manager);
     LFS_PYTHON_RUNTIME_API void* get_rml_manager();
 
+    using RmlContextDestroyFn = void (*)(void* context);
+    LFS_PYTHON_RUNTIME_API void set_rml_context_destroy_handler(RmlContextDestroyFn fn);
+    LFS_PYTHON_RUNTIME_API RmlContextDestroyFn get_rml_context_destroy_handler();
+
     // RmlPanelHost opaque operations — function pointers set by the exe
     // to avoid linking RmlUI code into the Python module (.so)
     struct PanelDrawContext;

@@ -147,14 +147,31 @@ namespace lfs::vis::gui::rml_theme {
             hashColor(seed, overlay.selection_flash);
         }
 
-        std::string shadowToRml(const Theme& t, float blur_scale = 1.0f, float alpha_scale = 1.0f) {
-            const float alpha = std::clamp(t.shadows.alpha * alpha_scale, 0.0f, 1.0f);
-            return std::format(
-                "{} {:.1f}dp {:.1f}dp {:.1f}dp",
-                colorToRmlAlpha({0.0f, 0.0f, 0.0f, 1.0f}, alpha),
-                t.shadows.offset.x,
-                t.shadows.offset.y,
-                std::max(0.0f, t.shadows.blur * blur_scale));
+        std::string layeredShadow(const Theme& t, int elevation) {
+            const float a = t.shadows.alpha;
+            const float blur = t.shadows.blur;
+
+            struct ElevationParams {
+                float tight_y, tight_blur, tight_alpha;
+                float ambient_y, ambient_blur_scale, ambient_alpha;
+            };
+
+            static constexpr ElevationParams levels[] = {
+                {1.0f, 2.0f, 0.40f, 3.0f, 0.5f, 0.20f},
+                {1.0f, 3.0f, 0.35f, 5.0f, 1.0f, 0.18f},
+                {2.0f, 4.0f, 0.32f, 8.0f, 1.3f, 0.16f},
+                {3.0f, 6.0f, 0.30f, 14.0f, 2.0f, 0.15f},
+            };
+
+            const int i = std::clamp(elevation - 1, 0, 3);
+            const auto& lv = levels[i];
+            const float ta = std::clamp(a * lv.tight_alpha, 0.0f, 1.0f);
+            const float aa = std::clamp(a * lv.ambient_alpha, 0.0f, 1.0f);
+
+            return std::format("{} 0dp {:.1f}dp {:.1f}dp, {} 0dp {:.1f}dp {:.1f}dp",
+                               colorToRmlAlpha({0, 0, 0, 1}, ta), lv.tight_y, lv.tight_blur,
+                               colorToRmlAlpha({0, 0, 0, 1}, aa), lv.ambient_y,
+                               std::max(0.0f, blur * lv.ambient_blur_scale));
         }
 
     } // namespace
@@ -366,22 +383,28 @@ namespace lfs::vis::gui::rml_theme {
                        ".btn-copy:hover {{ background-color: {3}; }}\n",
                        background, surface, border, surface_bright, text_dim,
                        text, primary_select, primary, primary_dim) +
+                   std::format(
+                       "#window-frame {{ border-color: {}; border-radius: {}dp; }}\n",
+                       colorToRmlAlpha(p.border, 0.4f),
+                       static_cast<int>(t.sizes.window_rounding)) +
                    [&]() -> std::string {
             if (!t.shadows.enabled)
                 return {};
+            const auto inset = std::format(", {} 0dp 0dp 0dp 1dp inset",
+                                           colorToRmlAlpha(p.surface_bright, 0.35f));
             return std::format(
-                "#window-frame {{ box-shadow: {}; }}\n"
+                "#window-frame {{ box-shadow: {}{}; }}\n"
                 ".context-menu {{ box-shadow: {}; }}\n"
                 "selectbox {{ box-shadow: {}; }}\n"
-                ".modal-dialog {{ box-shadow: {}; }}\n"
+                ".modal-dialog {{ box-shadow: {}{}; }}\n"
                 ".color-picker-popup {{ box-shadow: {}; }}\n"
-                ".confirm-dialog {{ box-shadow: {}; }}\n",
-                shadowToRml(t, 1.0f),
-                shadowToRml(t, 0.85f),
-                shadowToRml(t, 0.75f),
-                shadowToRml(t, 1.35f),
-                shadowToRml(t, 0.9f),
-                shadowToRml(t, 0.9f));
+                ".confirm-dialog {{ box-shadow: {}{}; }}\n",
+                layeredShadow(t, 2), inset,
+                layeredShadow(t, 3),
+                layeredShadow(t, 1),
+                layeredShadow(t, 4), inset,
+                layeredShadow(t, 3),
+                layeredShadow(t, 4), inset);
         }();
     }
 

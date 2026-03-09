@@ -142,6 +142,7 @@ namespace lfs::python {
         void* g_view_context_state{nullptr};
         float g_shared_dpi_scale{DEFAULT_DPI_SCALE};
         void* g_rml_manager{nullptr};
+        RmlContextDestroyFn g_rml_context_destroy_handler{nullptr};
         RmlPanelHostOps g_rml_panel_host_ops{};
         RmlDocRegisterCallback g_rml_doc_register_cb{nullptr};
         RmlDocUnregisterCallback g_rml_doc_unregister_cb{nullptr};
@@ -622,6 +623,14 @@ namespace lfs::python {
 
     void* get_rml_manager() {
         return g_rml_manager;
+    }
+
+    void set_rml_context_destroy_handler(RmlContextDestroyFn fn) {
+        g_rml_context_destroy_handler = fn;
+    }
+
+    RmlContextDestroyFn get_rml_context_destroy_handler() {
+        return g_rml_context_destroy_handler;
     }
 
     void set_rml_panel_host_ops(const RmlPanelHostOps& ops) {

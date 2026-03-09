@@ -35,6 +35,7 @@ namespace lfs::vis::gui {
     private:
         void updateTheme();
         std::string generateThemeRCSS(const lfs::vis::Theme& t) const;
+        void ensureBodyDataModelBound(Rml::Element* body);
 
         RmlUIManager* rml_manager_ = nullptr;
         Rml::Context* rml_context_ = nullptr;

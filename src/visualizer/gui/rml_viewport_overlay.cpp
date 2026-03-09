@@ -23,6 +23,7 @@
 #include <RmlUi/Core/Input.h>
 #include <cassert>
 #include <format>
+#include <vector>
 #include <imgui.h>
 
 namespace lfs::vis::gui {
@@ -149,7 +150,8 @@ namespace lfs::vis::gui {
 
         auto* hover = rml_context_->GetHoverElement();
         bool over_interactive = hover && hover->GetTagName() != "body" &&
-                                hover->GetId() != "overlay-body";
+                                hover->GetId() != "overlay-body" &&
+                                hover->GetId() != "dm-root";
 
         if (over_interactive) {
             wants_input_ = true;
@@ -166,6 +168,52 @@ namespace lfs::vis::gui {
 
             RmlPanelHost::setFrameTooltip(resolveRmlTooltip(hover));
         }
+    }
+
+    void RmlViewportOverlay::ensureBodyDataModelBound(Rml::Element* body) {
+        if (!body)
+            return;
+
+        const auto data_model = body->GetAttribute<Rml::String>("data-model", "");
+        if (data_model.empty() || body->GetDataModel())
+            return;
+
+        auto* existing = document_->GetElementById("dm-root");
+        if (existing) {
+            if (existing->GetDataModel())
+                return;
+
+            // Wrapper exists but binding is stale (data model was rebuilt).
+            // Tear it down so we can recreate with a fresh binding.
+            std::vector<Rml::Element*> children;
+            children.reserve(existing->GetNumChildren());
+            for (int i = 0; i < existing->GetNumChildren(); ++i)
+                children.push_back(existing->GetChild(i));
+            for (auto* child : children)
+                body->AppendChild(existing->RemoveChild(child));
+            body->RemoveChild(existing);
+        }
+
+        // RmlUI does not rebind data-model when the attribute is set after
+        // document load. Reattaching the subtree through a wrapper element
+        // forces the binding pass.
+        auto wrapper_ptr = document_->CreateElement("div");
+        wrapper_ptr->SetId("dm-root");
+        wrapper_ptr->SetAttribute("data-model", data_model);
+        wrapper_ptr->SetProperty("position", "relative");
+        wrapper_ptr->SetProperty("width", "100%");
+        wrapper_ptr->SetProperty("height", "100%");
+        auto* wrapper = body->AppendChild(std::move(wrapper_ptr));
+
+        std::vector<Rml::Element*> children_to_move;
+        children_to_move.reserve(body->GetNumChildren());
+        for (int i = 0; i < body->GetNumChildren(); ++i) {
+            auto* child = body->GetChild(i);
+            if (child != wrapper)
+                children_to_move.push_back(child);
+        }
+        for (auto* child : children_to_move)
+            wrapper->AppendChild(body->RemoveChild(child));
     }
 
     void RmlViewportOverlay::render() {
@@ -187,14 +235,11 @@ namespace lfs::vis::gui {
                 lfs::python::invoke_python_document_hooks("viewport_overlay", "document", document_, false);
             }
 
+            auto* body = document_->GetElementById("overlay-body");
+            ensureBodyDataModelBound(body);
+
             const int w = static_cast<int>(vp_size_.x);
             const int h = static_cast<int>(vp_size_.y);
-
-            auto* body = document_->GetElementById("overlay-body");
-            if (body) {
-                body->SetAttribute("data-vp-w", std::to_string(static_cast<int>(vp_size_.x)));
-                body->SetAttribute("data-vp-h", std::to_string(static_cast<int>(vp_size_.y)));
-            }
 
             rml_context_->SetDimensions(Rml::Vector2i(w, h));
             rml_context_->Update();

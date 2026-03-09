@@ -26,9 +26,6 @@ def register_builtin_panels():
         lf.ui.register_rml_panel(ResumeCheckpointPanel)
         lf.ui.set_panel_enabled("lfs.resume_checkpoint", False)
 
-        from . import toolbar
-        toolbar.register()
-
         from . import selection_groups
         selection_groups.register()
 

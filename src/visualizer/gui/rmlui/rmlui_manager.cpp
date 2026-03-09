@@ -12,6 +12,7 @@
 #include "gui/rmlui/rmlui_render_interface.hpp"
 #include "gui/rmlui/rmlui_system_interface.hpp"
 #include "internal/resource_paths.hpp"
+#include "python/python_runtime.hpp"
 
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/ElementInstancer.h>
@@ -186,6 +187,8 @@ namespace lfs::vis::gui {
     void RmlUIManager::destroyContext(const std::string& name) {
         auto it = contexts_.find(name);
         if (it != contexts_.end()) {
+            if (auto fn = lfs::python::get_rml_context_destroy_handler())
+                fn(it->second);
             Rml::RemoveContext(name);
             contexts_.erase(it);
         }
