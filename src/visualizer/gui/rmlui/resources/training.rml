@@ -105,7 +105,7 @@
       </div>
     </div>
 
-    <!-- Live-editable params -->
+    <!-- Params that follow the main training edit lock -->
     <div data-class-disabled-overlay="live_disabled">
       <div class="setting-row" data-tooltip="training.tooltip.bilateral_grid">
         <span class="prop-label">{{label_bilateral_grid}}</span>

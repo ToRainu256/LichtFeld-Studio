@@ -415,14 +415,18 @@ class TrainingPanel(Panel):
         model.bind_string_list("save_steps_list")
 
     def _bind_disabled(self, model, p):
+        def _params_edit_locked():
+            return not (
+                AppState.trainer_state.value == "ready"
+                and AppState.iteration.value == 0
+            )
+
         model.bind_func("struct_disabled",
-                         lambda: not (AppState.trainer_state.value == "ready" and
-                                      AppState.iteration.value == 0))
+                         _params_edit_locked)
         model.bind_func("live_disabled",
-                         lambda: AppState.trainer_state.value not in ("ready", "running", "paused"))
+                         _params_edit_locked)
         model.bind_func("adv_disabled",
-                         lambda: not (AppState.trainer_state.value == "ready" and
-                                      AppState.iteration.value == 0))
+                         _params_edit_locked)
         model.bind_func("gut_disabled",
                          lambda: p() is not None and p().has_params() and p().strategy == "adc")
         model.bind_func("dataset_disabled",
