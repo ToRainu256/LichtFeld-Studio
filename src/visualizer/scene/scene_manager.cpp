@@ -66,10 +66,10 @@ namespace lfs::vis {
         }
 
         void pushSceneGraphHistoryEntry(SceneManager& scene_manager,
-                                       std::string label,
-                                       op::SceneGraphStateSnapshot before,
-                                       const std::vector<std::string>& after_roots,
-                                       const op::SceneGraphCaptureOptions options = sceneGraphCaptureOptions()) {
+                                        std::string label,
+                                        op::SceneGraphStateSnapshot before,
+                                        const std::vector<std::string>& after_roots,
+                                        const op::SceneGraphCaptureOptions options = sceneGraphCaptureOptions()) {
             auto after = op::SceneGraphPatchEntry::captureState(scene_manager, after_roots, options);
             op::undoHistory().push(
                 std::make_unique<op::SceneGraphPatchEntry>(scene_manager, std::move(label),
@@ -2721,7 +2721,7 @@ namespace lfs::vis {
                         emit_added(c->name, node->name);
                     }
                 }
-        };
+            };
 
         emit_added(new_name, parent_name);
         pushSceneGraphHistoryEntry(*this, "Duplicate Node", std::move(history_before), {new_name}, history_options);

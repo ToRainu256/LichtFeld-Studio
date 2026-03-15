@@ -13,8 +13,8 @@
 #include "visualizer/operation/undo_entry.hpp"
 #include "visualizer/operation/undo_history.hpp"
 #include "visualizer/scene/scene_manager.hpp"
-#include <nanobind/ndarray.h>
 #include <algorithm>
+#include <nanobind/ndarray.h>
 
 namespace lfs::python {
 

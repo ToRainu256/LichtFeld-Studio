@@ -27,7 +27,7 @@ namespace lfs::vis {
 
             return {};
         }
-    }
+    } // namespace
 
     DataLoadingService::DataLoadingService(SceneManager* scene_manager)
         : scene_manager_(scene_manager) {

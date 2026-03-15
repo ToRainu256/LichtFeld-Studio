@@ -452,13 +452,13 @@ namespace lfs::vis::op {
     class LFS_VIS_API SceneGraphPatchEntry : public UndoEntry {
     public:
         static SceneGraphStateSnapshot captureState(const SceneManager& scene,
-                                                   const std::vector<std::string>& root_names,
-                                                   SceneGraphCaptureOptions options = {});
+                                                    const std::vector<std::string>& root_names,
+                                                    SceneGraphCaptureOptions options = {});
 
         SceneGraphPatchEntry(SceneManager& scene,
-                            std::string name,
-                            SceneGraphStateSnapshot before,
-                            SceneGraphStateSnapshot after);
+                             std::string name,
+                             SceneGraphStateSnapshot before,
+                             SceneGraphStateSnapshot after);
 
         void undo() override;
         void redo() override;

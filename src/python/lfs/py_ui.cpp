@@ -19,10 +19,10 @@
 #include "gui/utils/windows_utils.hpp"
 #include "internal/resource_paths.hpp"
 #include "io/exporter.hpp"
+#include "py_command.hpp"
 #include "py_gizmo.hpp"
 #include "py_keymap.hpp"
 #include "py_params.hpp"
-#include "py_command.hpp"
 #include "py_prop_registry.hpp"
 #include "py_rml.hpp"
 #include "py_signals.hpp"
@@ -928,7 +928,7 @@ namespace lfs::python {
 
             if (has_modal) {
                 callbacks.modal = [class_id = id, label = desc.label, has_undo](const vis::op::ModalEvent& event,
-                                                                                 vis::op::OperatorProperties& /*props*/) -> vis::op::OperatorResult {
+                                                                                vis::op::OperatorProperties& /*props*/) -> vis::op::OperatorResult {
                     nb::gil_scoped_acquire gil;
                     nb::object instance = get_python_operator_instance(class_id);
                     if (!instance.is_valid() || instance.is_none()) {

@@ -7,8 +7,8 @@
 #include "core/event_bridge/command_center_bridge.hpp"
 #include "core/logger.hpp"
 #include "python/python_runtime.hpp"
-#include "visualizer/operation/undo_history.hpp"
 #include "scene/scene_manager.hpp"
+#include "visualizer/operation/undo_history.hpp"
 #include <cassert>
 
 namespace lfs::vis::op {

@@ -10,8 +10,8 @@
 #include "rendering/rendering_manager.hpp"
 #include "scene/scene_manager.hpp"
 #include "undo_history.hpp"
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cuda_runtime.h>
 #include <limits>
 #include <set>
@@ -20,8 +20,8 @@
 namespace lfs::vis::op {
 
     namespace {
-        using lfs::core::events::state::PLYAdded;
         using lfs::core::events::state::NodeReparented;
+        using lfs::core::events::state::PLYAdded;
         using lfs::core::events::state::PLYRemoved;
         using lfs::core::events::state::SceneCleared;
         constexpr auto PROPERTY_COALESCE_WINDOW = std::chrono::milliseconds(500);
@@ -168,7 +168,7 @@ namespace lfs::vis::op {
         }
 
         SceneGraphNodeMetadataSnapshot captureNodeMetadataSnapshot(const SceneManager& scene_manager,
-                                                                  const lfs::core::SceneNode& node);
+                                                                   const lfs::core::SceneNode& node);
 
         void restorePlyPathForSnapshot(SceneManager& scene_manager,
                                        const std::string& node_name,
@@ -720,7 +720,7 @@ namespace lfs::vis::op {
         }
 
         SceneGraphNodeMetadataSnapshot captureNodeMetadataSnapshot(const SceneManager& scene_manager,
-                                                                  const lfs::core::SceneNode& node) {
+                                                                   const lfs::core::SceneNode& node) {
             SceneGraphNodeMetadataSnapshot snapshot;
             snapshot.name = node.name;
             snapshot.parent_name.clear();

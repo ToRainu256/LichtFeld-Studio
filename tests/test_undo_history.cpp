@@ -7,16 +7,16 @@
 #include "core/services.hpp"
 #include "core/splat_data.hpp"
 #include "core/tensor.hpp"
-#include "visualizer/gui_capabilities.hpp"
 #include "operation/undo_history.hpp"
 #include "rendering/rendering_manager.hpp"
 #include "scene/scene_manager.hpp"
+#include "visualizer/gui_capabilities.hpp"
 
-#include <gtest/gtest.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <any>
 #include <condition_variable>
 #include <future>
+#include <glm/gtc/matrix_transform.hpp>
+#include <gtest/gtest.h>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
